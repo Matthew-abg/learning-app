@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎓 learning_app
 
 An interactive learning platform combining **gamified lessons**, **conceptual problem solving**, and **community-based learning**. Built with **Django** and designed for scalability, clarity, and professional development.
@@ -49,7 +48,3 @@ Edu Platform aims to create a rich, modular, and extensible learning experience,
 ## 🗺️ Architecture Roadmap
 
 Phase 1 — ✅ Django core setup with Poetry & environment isolation
-=======
-# learning-app
-An interactive learning platform combining gamified lessons, challenges, and community — built with Django &amp; Python.
->>>>>>> 0fcd668 (Initial commit)
