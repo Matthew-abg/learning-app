@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env
+.env
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Django
+*.sqlite3
+/media/
+staticfiles/
+
+# Poetry
+poetry.lock
+
+# OS
+.DS_Store
+Thumbs.db
