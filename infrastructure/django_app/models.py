@@ -6,9 +6,9 @@ from domain.models import LearnableState, LearningUnitType
 class LearningContentModel(models.Model):
     # Because the id is a string in the domain model
     id = models.CharField(primary_key=True, max_length=64)
-    data: models.JSONField[dict[str, str]] = models.JSONField()
+    data = models.JSONField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Content {self.id}"
 
 
@@ -39,7 +39,7 @@ class LearningBlockModel(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
@@ -74,5 +74,5 @@ class LearningUnitModel(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
