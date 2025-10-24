@@ -181,3 +181,39 @@ Together, they make your repository much more professional, something senior eng
 
 ---
 ---
+
+### 🧩 Day 6, 2025-10-24 (Friday) - In the Path of Understanding the Real Flow in Clean Architecture
+
+#### 🧰 What I Did
+- Explored how **Mappers** should behave: realized that a mapper’s role is to translate between domain entities and ORM models, not to persist data.
+- Wrote the first three mappers for the first three models
+- Investigated Django internals like `_prefetched_content`, understanding how Django caches preloaded relations in memory.
+- Experimented with **lazy evaluation** of QuerySets, clarified when Django actually hits the database.
+- Created real test data in the shell: a `LearningUnit` containing multiple `LearningBlocks`, each with several `LearningContents`.
+- Investigated when and why **Repositories** and **Use Cases** should be added, and why it’s premature to implement them today.
+
+#### 📘 What I Learned
+1. **A Mapper is not a Saver and it's complicated about ManyToMany relations.**  
+   Its purpose is in-memory transformation, not persistence. This separation prevents accidental side effects and aligns the ORM with the domain model cleanly. And also in a Mapper, you can’t always directly map a Domain entity to a Django model, especially with `ManyToMany` relations. The model instance must exist before Django can attach related objects. The correct approach is to create the base object first, then store related entities temporarily in a custom attribute (e.g., `_prefetched_content`) so that the data travels with the object in memory even before saving. This keeps the mapping accurate without forcing premature persistence.
+
+2. **Django’s QuerySets are lazy, but not everything is cached.**  
+   Only evaluated queries are stored, and methods like `.count()` always hit the DB (Because they are actually different SQL queries). Recognizing which operations are cached helps avoid performance traps.
+
+3. **_prefetched_content** is Django’s internal optimization.  
+   It stores preloaded related objects in memory after `prefetch_related()`, letting you iterate without extra queries. It’s a perfect example of how Django separates “data loading” from “object behavior.” Django’s `select_related` and `prefetch_related` are powerful tools for optimizing queries. They “join” related data efficiently and reducing the number of database hits greatly when navigating relationships.
+
+4. **Clean Architecture ≠ premature abstraction.**  
+   Its goal is separation of concerns, not over-engineering. You build the simplest possible working flow first, then evolve abstractions from real pain points.
+  
+5. - **Clean architecture path.**
+    Clarified how Clean Architecture layers map to Django (Until this point I think like that! It's very very likely to change tomorrow!): 
+    Interface (views) → Application (use cases) → Infrastructure (ORM) → Domain (entities).
+
+6. **Don’t invent artificial IDs when natural uniqueness already exists.**  
+    If a combination of fields (like `user_id`, `gateway_id`, and `date`) already makes a record unique, use that as a **composite key** instead of generating a fake hash or UUID.  
+    Creating a synthetic ID in such cases doesn’t add clarity, it hides the natural structure of the data and introduces unnecessary complexity.  
+    Good database design reflects the **real logical identity** of an entity, not an arbitrary one invented for convenience or “creativity.”
+
+
+**Summary:**  
+Today’s work connected architecture with reality. Instead of memorizing Clean Architecture rules, I learned *why* each boundary exists, to keep responsibilities clear, code predictable, and growth manageable. This session turned abstract “architecture talk” into an actual flow I can see, test, and extend.
