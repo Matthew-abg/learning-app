@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from django.db import models
 
 from domain.models import LearnableState, LearningUnitType
@@ -39,12 +40,14 @@ class LearningBlockModel(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
+    _prefetched_content: Optional[list[LearningContentModel]]
+
     def __str__(self) -> str:
         return self.title
 
 
 class LearningUnitModel(models.Model):
-    # 
+    # Because the id is a string in the domain model
     id = models.CharField(primary_key=True, max_length=64)
     title = models.CharField(max_length=255)
     type = models.CharField(
