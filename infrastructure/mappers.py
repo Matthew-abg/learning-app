@@ -39,7 +39,7 @@ class LearningBlockMapper:
         return LearningBlock(
             id = model.id,
             title = model.title,
-            content = [LearningContentMapper.to_domain(content) for content in model.content.all()],
+            content_ids = [content.id for content in model.contents.all()],
 
             # Because we saved it with title() in the model
             state = LearnableState(model.state.lower()),
@@ -48,27 +48,29 @@ class LearningBlockMapper:
             created_at = model.created_at,
             updated_at = model.updated_at,
         )
-
-    @staticmethod
-    def to_model(entity: LearningBlock) -> LearningBlockModel:
-        """Convert Domain entity → ORM model."""
-        new_block_obj = LearningBlockModel(
-            id = entity.id,
-            title = entity.title,
+    # TODO Based on the changes in Domain.models.py, I have to change this method too
+    
+    # @staticmethod
+    # def to_model(entity: LearningBlock) -> LearningBlockModel:
+    #     """Convert Domain entity → ORM model."""
+    #     new_block_obj = LearningBlockModel(
+    #         id = entity.id,
+    #         title = entity.title,
             
-            # Because we need to save it as title() in the model
-            # Just to be consistent with the choices defined in the model
-            state = entity.state.value.title(),
+    #         # Because we need to save it as title() in the model
+    #         # Just to be consistent with the choices defined in the model
+    #         state = entity.state.value.title(),
 
-            xp = entity.xp,
-            created_at = entity.created_at,
-            updated_at = entity.updated_at,
-        )
+    #         xp = entity.xp,
+    #         created_at = entity.created_at,
+    #         updated_at = entity.updated_at,
+    #     )
 
-        # We don't want to save related objects here
-        # So we just prepare a prefetched list for later use
-        new_block_obj._prefetched_content = [LearningContentMapper.to_model(content) for content in entity.content]
-        return new_block_obj
+    #     # We don't want to save related objects here
+    #     # So we just prepare a prefetched list for later use
+        
+    #     new_block_obj._prefetched_contents = [LearningContentMapper.to_model(content) for content in entity.contents]
+    #     return new_block_obj
 
 
 class LearningUnitMapper:
@@ -87,7 +89,7 @@ class LearningUnitMapper:
             # Because we saved it with title() in the model
             type = LearningUnitType(model.type.lower()),
 
-            blocks = [LearningBlockMapper.to_domain(block) for block in model.blocks.all()],
+            block_ids = [block.id for block in model.blocks.all()],
             
             # Because we saved it with title() in the model
             state = LearnableState(model.state.lower()),
