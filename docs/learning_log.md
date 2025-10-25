@@ -217,3 +217,67 @@ Together, they make your repository much more professional, something senior eng
 
 **Summary:**  
 Today’s work connected architecture with reality. Instead of memorizing Clean Architecture rules, I learned *why* each boundary exists, to keep responsibilities clear, code predictable, and growth manageable. This session turned abstract “architecture talk” into an actual flow I can see, test, and extend.
+
+
+
+### 🧩 Day 7 — 2025-10-25 (Saturday) - Ship a clean Unit Details endpoint (read path only)
+
+#### 🧰 What I Did
+
+- Locked the external contract (URL) first
+  Decided the only scope for the first phase is GET /units/<unit_id>/. This keeps the surface area tiny and lets me verify boundary wiring end-to-end without touching behavior that depends on user progress. 
+
+- Created a minimal, framework-thin View (Interface layer) -> UnitDetailsView.get
+    parses inputs,
+    calls GetUnitDetailsService.execute(unit_id),
+    returns the DTO as JSON.
+    No ORM, no domain logic in the view. Just request/response translation.
+
+- Separated Application from Domain (foldering decision)
+  Introduced a top-level application/ package (separate from domain/).Rationale: Application orchestrates use cases and depends on Domain, not the other way around. This preserves inward-only dependencies and allows UI/framework swaps later (templates → SPA) with minimal churn.
+
+- Defined the Domain repository interface (unit reading path only)
+
+- Implemented Infrastructure repository that honors the Domain repository interface
+  Uses prefetch_related("blocks") to materialize the two M2M hops efficiently.
+
+- Introduced explicit Mappers (ORM ↔ Domain), not inside the repository but inside /infrastructure
+  LearningContentMapper (two-way), LearningBlockMapper (two-way) and LearningUnitMapper (today: ORM→Domain only)
+  Rationale: keep Repository focused on data access while mapping stays reusable/testable and isolated.
+
+- Clarified ordering concerns (not implemented yet by design)
+  Blocks and contents are M2M. Their display order is not intrinsic to the child; it belongs to the relationship (through table). For now I read them as-is; I’ll add an order column on the through tables and then apply .order_by("through__order") (or Prefetch with an ordered queryset). A TODO is left in code to make the dependency explicit.
+
+
+#### 📘 What I Learned
+
+- Continued learning select_related vs prefetch_related, using the right tool based on the case
+  select_related is only for FK/OneToOne (JOIN in a single query).
+  prefetch_related is for M2M/reverse relations (separate queries + in-memory join) -> It can be used for more complicated ManyToMany relations
+  With Unit→Blocks→Contents (M2M→M2M), prefetch_related("blocks__contents") is the correct, scalable approach. A single gigantic SQL JOIN is neither necessary nor desirable here; Django’s prefetch does the optimal 2–3 queries and caches them.
+
+- Why unit_obj.__dict__ doesn’t show everything
+  __dict__ stores concrete model fields; relationships are descriptors and their prefetched data lives in _prefetched_objects_cache. Seeing blocks but not contents on Unit is expected because contents isn’t a direct field on Unit; it belongs to Block.
+
+- M2M write semantics are special
+  You cannot assign a list to an M2M attribute on a model instance constructor; you must save() then call .set([...]) (or .add(...)). For read-only mapping, stash temporary data (e.g., _prefetched_contents) or keep mapping in Domain space and avoid constructing ORM objects you won’t persist.
+
+- Abstract methods are contracts, not “optional guidance”
+  Marking the Domain Repository.get_unit_by_id as @abstractmethod ensures no one can instantiate a half-implemented repo. This enforces architecture boundaries at runtime, not just in docs.
+
+- Mapper responsibilities are directional and should be explicit
+  Keep ORM → Domain and Domain → ORM paths separate to avoid accidental coupling and make tests simpler. Application will have its own Domain → DTO mapping, again in a different layer.
+
+- URL-first thinking helps keep boundaries honest
+  By committing early to GET /units/<unit_id>/ as the only delivery target, I prevented scope creep and kept the View dumb, the Use Case focused, and the Repository & Mapper well-factored.
+
+- Verified ORM loading behavior and caching
+  prefetch_related produces ~3 queries for Unit→Blocks→Contents, then uses memory cache (_prefetched_objects_cache) so subsequent block.contents.all() calls don’t hit the DB. Used reset_queries() + connection.queries to assert query counts during navigation.
+
+- Observed that after prefetching, Django stores results in `_prefetched_objects_cache`, and if those related objects themselves have nested relationships (like other ManyToMany or ForeignKey fields also included in the same `prefetch_related` call), Django recursively fills their own `_prefetched_objects_cache` as well. When `.all()` is called, it checks these caches instead of hitting the database again. Which is smart!
+
+- Reconfirmed why content (Which are in second connection with unit, unit has ManyToMany relation with blocks and each block has ManyToMany relation with contents) won’t appear in unit_obj.__dict__ (it’s not a direct field on Unit), whereas blocks does (it’s a declared M2M on Unit).
+
+- Realized that in my domain layer, I shouldn’t connect entities to each other as nested Python objects (e.g., `LearningUnit` → `LearningBlock` → `LearningContent` as full objects). -> The reason is that if nested objects are stored directly, every sub-entity must be fully constructed and resolved in memory whenever a parent entity is loaded, which breaks the independence and purity of the domain layer. So I think, in the **Domain layer**, each entity should reference other entities **by their IDs**, not by direct object instances.
+
+
