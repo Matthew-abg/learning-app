@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 class LearnableState(Enum):
     LOCKED = "locked"             
     AVAILABLE = "available"       
-    IN_PROGRESS = "in_progress"   
+    IN_PROGRESS = "in_progress"
     PAUSED = "paused"             
     DONE = "done"                 
     FAILED = "failed"
@@ -50,7 +50,10 @@ class LearningContent:
 class LearningBlock:
     id: str
     title: str
-    content: list[LearningContent]
+    # TODO as an idea, we can have specific types of ids in the system
+    # e.g., ContentID, BlockID, UnitID to avoid confusion
+    # They can be objects
+    content_ids : list[str]
     state: LearnableState = LearnableState.LOCKED
     xp: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -62,10 +65,8 @@ class LearningUnit:
     id: str
     title: str
     type: LearningUnitType
-    blocks: List[LearningBlock]
+    block_ids: List[str]
     state: LearnableState = LearnableState.LOCKED
     xp: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-
