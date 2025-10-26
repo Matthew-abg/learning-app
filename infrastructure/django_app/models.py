@@ -23,7 +23,7 @@ class LearningBlockModel(models.Model):
     # Because these fields are added dynamically by django
     # and as much as I know there's currently no way in the
     # Python type system to tell a static type checker that they will exist.
-    content = models.ManyToManyField(LearningContentModel, related_name="blocks")  # type: ignore
+    contents = models.ManyToManyField(LearningContentModel, related_name="blocks")
     
     # Because the enum is defined in the domain model
     # Single Source of Truth
@@ -40,7 +40,6 @@ class LearningBlockModel(models.Model):
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
 
-    _prefetched_content: Optional[list[LearningContentModel]]
 
     def __str__(self) -> str:
         return self.title
@@ -60,7 +59,7 @@ class LearningUnitModel(models.Model):
     # Because these fields are added dynamically by django
     # and as much as I know there's currently no way in the
     # Python type system to tell a static type checker that they will exist.
-    blocks = models.ManyToManyField(LearningBlockModel, related_name="units")  # type: ignore
+    blocks = models.ManyToManyField(LearningBlockModel, related_name="units")
 
     # Because the enum is defined in the domain model
     # Single Source of Truth
