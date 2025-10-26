@@ -182,7 +182,7 @@ Together, they make your repository much more professional, something senior eng
 ---
 ---
 
-### 🧩 Day 6, 2025-10-24 (Friday) - In the Path of Understanding the Real Flow in Clean Architecture
+### 🧩 Day 6 - 2025-10-24 (Friday) - In the Path of Understanding the Real Flow in Clean Architecture
 
 #### 🧰 What I Did
 - Explored how **Mappers** should behave: realized that a mapper’s role is to translate between domain entities and ORM models, not to persist data.
@@ -218,9 +218,10 @@ Together, they make your repository much more professional, something senior eng
 **Summary:**  
 Today’s work connected architecture with reality. Instead of memorizing Clean Architecture rules, I learned *why* each boundary exists, to keep responsibilities clear, code predictable, and growth manageable. This session turned abstract “architecture talk” into an actual flow I can see, test, and extend.
 
+---
+---
 
-
-### 🧩 Day 7 — 2025-10-25 (Saturday) - Ship a clean Unit Details endpoint (read path only)
+### 🧩 Day 7 - 2025-10-25 (Saturday) - Ship a clean Unit Details endpoint (read path only)
 
 #### 🧰 What I Did
 
@@ -280,4 +281,47 @@ Today’s work connected architecture with reality. Instead of memorizing Clean 
 
 - Realized that in my domain layer, I shouldn’t connect entities to each other as nested Python objects (e.g., `LearningUnit` → `LearningBlock` → `LearningContent` as full objects). -> The reason is that if nested objects are stored directly, every sub-entity must be fully constructed and resolved in memory whenever a parent entity is loaded, which breaks the independence and purity of the domain layer. So I think, in the **Domain layer**, each entity should reference other entities **by their IDs**, not by direct object instances.
 
+---
+---
 
+### 🧩 Day 8 - 2025-10-26 (Sunday) - Understanding Type Hints, TYPE_CHECKING, and Clean Architecture Boundaries and Flow
+
+#### 🧰 What I Did
+
+- Explored how Python’s attribute resolution order (`__dict__`, class lookup, descriptor check) affects Django’s ORM field access.  
+- Examined transaction behavior in SQL (`BEGIN`, `INSERT ... RETURNING`) to understand how Django manages database writes atomically.  
+- Implemented a `DjangoRepository` class inside the Infrastructure layer, following the dependency inversion principle from Clean Architecture.  
+- Encountered and resolved a `NameError` related to using `TYPE_CHECKING` and string type hints in Python annotations.  
+- Reviewed how to correctly type-hint Django views and repository methods while keeping the domain layer decoupled.  
+- Configured `mypy` to enforce strict typing and fixed related `no-untyped-def` warnings by adding explicit type annotations.  
+
+#### 📘 What I Learned
+
+- **Descriptors and ORM Field Access:**  
+  Investigated how Django descriptors and ORM caching mechanisms (`_prefetched_objects_cache`, `ForeignKey`, `ManyToManyDescriptor`) work internally. Every Django field (e.g., `ForeignKey`, `ManyToManyField`) is implemented as a Python *descriptor* on the model class. When you access `obj.field`, Django doesn’t just read from `__dict__`; it triggers the descriptor’s `__get__` method, which decides whether to fetch from cache or run a query.
+
+- **Attribute Resolution Order:**  
+  Python first looks for the attribute inside `instance.__dict__`.  
+  If it doesn’t find it there, it moves on to the class and checks if that class attribute defines a `__get__` or `__set__` method , in other words, if it’s a *descriptor*.  
+  That’s exactly how Django turns something like this:
+
+  ```python
+  unit = LearningUnitModel.objects.get(id=1)
+  block = unit.block
+  ```
+
+  into a real Block object.
+  Even though the database table only has a block_id column (not block), when Python doesn’t find block in the instance’s __dict__, it looks at the model class definition and finds the field descriptor that Django added for that relationship. That descriptor knows how to fetch the related object, so instead of giving you the raw ID, it gives you the actual related Block instance. In short, Django uses Python’s descriptor protocol to make unit.block behave like a real object, even though under the hood it’s stored as block_id in the database.
+
+- **Database Transactions (`BEGIN`):**  
+  The `BEGIN` statement in SQL shows Django starting a transaction before running an `INSERT` or `UPDATE`. It ensures atomicity , either the entire block succeeds or rolls back on failure.
+
+- **TYPE_CHECKING and String Literals:**  
+  `if TYPE_CHECKING:` blocks run only during static analysis (not at runtime). Therefore, when using `TYPE_CHECKING`, runtime code must annotate types as strings (e.g., `-> "LearningUnit"`) to avoid `NameError`. This pattern prevents circular imports and keeps layers independent. (In newer versions of python you will get error in these cases so you have to put the type hint in ""!)
+
+- **Why Not Import Domain Models in Infrastructure:**  
+  Importing a domain model (like `LearningUnit`) inside an infrastructure repository creates a real runtime dependency. Even if it’s “just for type hints,” it breaks Clean Architecture boundaries. (Actually, it may not break but it )
+  Instead, `TYPE_CHECKING` + string hints maintain full IDE/type-checker support without runtime coupling.
+
+- **Dataclasses as DTOs:**
+  DTOs (@dataclass(frozen=True)) are ideal for passing structured, immutable data between layers in clean architecture. They don’t contain business logic, only plain fields, making them perfect for Clean Architecture’s “boundary objects.” Use asdict(dto) to serialize them cleanly for JSON responses.
