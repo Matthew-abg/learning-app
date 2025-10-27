@@ -6,6 +6,7 @@ class LearningContentMapper:
     """
     Converts between the Django ORM model (LearningContentModel)
     and the Domain Entity (LearningContent).
+    For now, just a simple direct mapping. From model to domain.
     """
 
     @staticmethod
@@ -16,21 +17,13 @@ class LearningContentMapper:
             data = model.data,
         )
 
-    @staticmethod
-    def to_model(entity: LearningContent) -> LearningContentModel:
-        """Convert Domain entity → ORM model."""
-        return LearningContentModel(
-            id = entity.id,
-            data = entity.data,
-        )
-
-
 
 
 class LearningBlockMapper:
     """
     Converts between the Django ORM model (LearningBlockModel)
     and the Domain Entity (LearningBlock).
+    For now, just a simple direct mapping. From model to domain.
     """
 
     @staticmethod
@@ -48,35 +41,12 @@ class LearningBlockMapper:
             created_at = model.created_at,
             updated_at = model.updated_at,
         )
-    # TODO Based on the changes in Domain.models.py, I have to change this method too
-    
-    # @staticmethod
-    # def to_model(entity: LearningBlock) -> LearningBlockModel:
-    #     """Convert Domain entity → ORM model."""
-    #     new_block_obj = LearningBlockModel(
-    #         id = entity.id,
-    #         title = entity.title,
-            
-    #         # Because we need to save it as title() in the model
-    #         # Just to be consistent with the choices defined in the model
-    #         state = entity.state.value.title(),
-
-    #         xp = entity.xp,
-    #         created_at = entity.created_at,
-    #         updated_at = entity.updated_at,
-    #     )
-
-    #     # We don't want to save related objects here
-    #     # So we just prepare a prefetched list for later use
-        
-    #     new_block_obj._prefetched_contents = [LearningContentMapper.to_model(content) for content in entity.contents]
-    #     return new_block_obj
-
 
 class LearningUnitMapper:
     """
     Converts between the Django ORM model (LearningUnitModel in Infrastructure.django_app.models)
     and the Domain Entity (LearningUnit in Domain.models).
+    For now, just a simple direct mapping. From model to domain.
     """
 
     @staticmethod
