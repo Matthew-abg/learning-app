@@ -213,6 +213,10 @@ Together, they make your repository much more professional, something senior eng
     If a combination of fields (like `user_id`, `gateway_id`, and `date`) already makes a record unique, use that as a **composite key** instead of generating a fake hash or UUID.  
     Creating a synthetic ID in such cases doesn’t add clarity, it hides the natural structure of the data and introduces unnecessary complexity.  
     Good database design reflects the **real logical identity** of an entity, not an arbitrary one invented for convenience or “creativity.”
+    
+7. **The N+1 Query Problem:**  
+  When using ORM relationships (e.g., ManyToMany), a single loop over related objects can cause N extra queries. Using `prefetch_related()` or `select_related()` allows Django to fetch all needed data in 2–3 controlled queries instead of dozens.  
+  This is essential for performance in systems with nested relationships.
 
 
 **Summary:**  
@@ -325,3 +329,46 @@ Today’s work connected architecture with reality. Instead of memorizing Clean 
 
 - **Dataclasses as DTOs:**
   DTOs (@dataclass(frozen=True)) are ideal for passing structured, immutable data between layers in clean architecture. They don’t contain business logic, only plain fields, making them perfect for Clean Architecture’s “boundary objects.” Use asdict(dto) to serialize them cleanly for JSON responses.
+
+---
+---
+
+### 🧩 Day 9 — 2025-10-27 (Monday) - ORM Review and Mapper Cleanup
+
+#### 🧰 What I Did
+
+- Spent time reviewing how **Django ORM** works.
+- Read a few technical articles and Django documentation to better understand how ORM queries are generated and optimized.
+- Cleaned up the `/infrastructure/mappers.py` file by removing unnecessary or leftover lines from previous experiments.
+
+---
+---
+
+### 🧩 Day 10 — 2025-10-28 (Tuesday) - Clean Architecture Review (Phase 1: Domain → Infrastructure → View)
+
+#### 🧰 What I Did
+
+- Reviewed and analyzed the entire project structure for **Phase 1** of the Clean Architecture implementation. (By phase 1 I mean a whole structure which is working just for a simple url fetch, getting LearningUnit details with its id) 
+- Carefully went through all of the files and prepared a list of technical ideas to work on. I think first I should have a correct and right structure. Then I'll be able to develop on this structure fast.
+- Analyzed the full flow of data from ORM → Domain → DTO → JSON response.
+- Identified improvement points for later phases: exception handling, dependency injection, and response flexibility.
+
+
+#### 📘 What I Learned
+
+- **Error Handling in Clean Architecture:**  
+  The repository should raise domain-specific exceptions (e.g., `UnitNotFoundError`) when data is missing. The use case can catch or propagate this, and the View layer translates it into the correct HTTP response (e.g., 404).
+
+- **Dependency Injection and Composition Root:**  
+  Dependency setup (e.g., repository → use case → view) shouldn’t happen inside the View. It should be composed at a higher level — usually in `urls.py` or a dependency container — keeping Views framework-specific but logic-free.
+
+- **Immutable Entities — Language vs. Domain level:**  
+  In Domain-Driven Design, “immutable” means state changes can only happen through valid *behaviors* (e.g., `mark_done()`), not by directly changing attributes. Logical immutability matters more than syntactic immutability.
+
+- **Design Philosophy:**  
+  Clean Architecture isn’t about protecting developers from mistakes — it’s about *limiting the blast radius* of those mistakes. The goal is a structure where, even if a developer makes an error, the damage stays within one layer.  
+  > “Clean Architecture tolerates mistakes; good design prevents them.”
+
+
+---
+---
