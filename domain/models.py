@@ -41,6 +41,7 @@ class LearningUnitType(Enum):
 
 
 @dataclass
+# This is just a placeholder for actual learning content
 class LearningContent:
     id: str
     data: dict[str, str]

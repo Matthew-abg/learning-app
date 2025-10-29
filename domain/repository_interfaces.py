@@ -7,5 +7,5 @@ class Repository(ABC):
 
     @abstractmethod
     def get_unit_by_id(self, unit_id: str) -> LearningUnit:
-        """Fetch a full Unit aggregate (with its Blocks and Contents) by ID."""
+        """Fetch a full Unit aggregate by ID."""
         pass
